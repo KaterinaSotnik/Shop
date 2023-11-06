@@ -1,0 +1,555 @@
+используя System.Xml.Сериализацию;
+
+пространство имен Shopping;
+
+    публичный интерфейс ILensStore
+    {
+        аннулирует аутентификацию(строковое имя пользователя, строковый пароль);
+        аннулировать регистр(строковое имяпользователя, строковый пароль, десятичный баланс);
+        void addProduct(строковое название, десятичная цена, int количество);
+        аннулирует UpdateProductStock(строковое название, int количество);
+        void AddToCart(имя строки);
+        void RemoveFromCart(строковое имя);
+        аннулировать покупки();
+        аннулирует баланс повторной загрузки(десятичная сумма);
+        аннулировать ShowCatalog();
+        недействительная витрина();
+        аннулировать историю покупки();
+        Список<IProduct> SearchProduct(строковое ключевое;,,
+        void AddProductToCatalog(строковое название, десятичная цена, int количество);
+        аннулирует SaveCatalogToFile(строковое имя файла);
+        void загружает каталог из файла(строковое имя файла);
+    }
+
+    открытый класс LensStore : ILensStore
+    {
+        частный список<IProduct> каталога;
+        частная тележка для покупок ShoppingCart;
+        частный IUser Текущий пользователь;
+        личный список<IUser> пользователей;
+
+        общественный магазин линз()
+        {
+            каталог = новый список<IProduct>();
+            shoppingCart = new ShoppingCart();
+            users = new List<IUser>();
+            currentUser = null;
+        }
+
+        public void SaveData<T>(T data, string filename)
+        {
+            using (var stream = new FileStream(filename, FileMode.Create))
+            {
+                var serializer = new XmlSerializer(typeof(T));
+                serializer.Serialize(stream, data);
+            }
+        }
+
+        public T LoadData<T>(string filename)
+        {
+            if (File.Exists(filename))
+            {
+                using (var stream = new FileStream(filename, FileMode.Open))
+                {
+                    var serializer = new XmlSerializer(typeof(T));
+                    return (T)serializer.Deserialize(stream);
+                }
+            }
+            return default(T);
+        }
+
+        public void Authenticate(string username, string password)
+        {
+            IUser user = FindUser(username, password);
+
+            if (user != null)
+            {
+                currentUser = user;
+                Console.WriteLine("Authentication Successful");
+            }
+            else
+            {
+                Console.WriteLine("Authentication Failed");
+            }
+        }
+
+        public void Register(string username, string password, decimal balance)
+        {
+            IUser user = FindUser(username);
+
+            if (user == null)
+            {
+                User newUser = new User
+                {
+                    Username = username,
+                    Password = password,
+                    Balance = balance,
+                    Purchases = new List<IPurchase>()
+                };
+
+                users.Add(newUser);
+                Console.WriteLine("Registration Successful");
+            }
+            else
+            {
+                Console.WriteLine("Registration Failed: Username already exists");
+            }
+        }
+
+        public void AddProduct(string name, decimal price, int quantity)
+        {
+            Product newProduct = new Product
+            {
+                Name = name,
+                Price = price,
+                Quantity = quantity
+            };
+
+            catalog.Add(newProduct);
+            Console.WriteLine("Product added to catalog");
+        }
+
+        public void AddProductToCatalog(string name, decimal price, int quantity)
+        {
+            IProduct product = FindProduct(name);
+
+            if (product != null)
+            {
+                // Product with the same name already exists, update its stock.
+                product.Quantity += quantity;
+            }
+            else
+            {
+                // Create a new product and add it to the catalog.
+                Product newProduct = new Product
+                {
+                    Name = name,
+                    Price = price,
+                    Quantity = quantity
+                };
+
+                catalog.Add(newProduct);
+                Console.WriteLine("New product added to catalog");
+            }
+        }
+
+        public void UpdateProductStock(string name, int quantity)
+        {
+            IProduct product = FindProduct(name);
+
+            if (product != null)
+            {
+                product.Quantity += quantity;
+                Console.WriteLine("Product stock updated");
+            }
+            else
+            {
+                Console.WriteLine("Product not found in catalog");
+            }
+        }
+
+        public void AddToCart(string name)
+        {
+            IProduct product = FindProduct(name);
+
+            if (product != null)
+            {
+                shoppingCart.Products.Add(product);
+                Console.WriteLine("Product added to cart");
+            }
+            else
+            {
+                Console.WriteLine("Product not found in catalog");
+            }
+        }
+
+        public void RemoveFromCart(строковое имя)
+        {
+            = продукт IProduct FindProductInCart(название);
+
+            if (продукт != null)
+            {
+ Корзина для покупок.Товары.Удалить(продукт);
+ Консоль.Строка записи("Товар удален из корзины");
+            }
+            ещё
+            {
+ Консоль.Строка записи("Товар не найден в корзине");
+            }
+        }
+
+        публичные недействительные элементы ), ,
+        {
+            && null!= Текущий пользователь ( если ShoppingCart.Товары.Количество > 0)
+            {
+                = Общая стоимость десятичной корзины покупок.Товары.Сумма(p => p.Цена);
+                ( еслитекущий пользователь.Баланс >= Общая стоимость)
+                {
+                    новый = Новая покупка Покупка Purchase
+                    {
+                        = Дата DateTime.Сейчас,
+                        = товаров.Товары
+                    };
+
+ Текущий пользователь.Покупки.Добавить(Новая покупка);
+
+ Текущий пользователь.Баланс -= Общая стоимость;
+
+ Корзина для покупок.Товары.Очистить();
+
+ Консоль.Строка записи("Покупка прошла успешно");
+                }
+                ещё
+                {
+ Консоль.Строка записи("Недостаточный баланс");
+                }
+            }
+            ещё
+            {
+ Консоль.Строка записи("Пользователь не аутентифицирован или корзина пуста");
+            }
+        }
+
+        общедоступный недействительный баланс повторной загрузки(десятичная сумма после запятой), ,
+        {
+            if (CurrentUser != null)
+            {
+ Текущий пользователь.Баланс += сумма;
+ Консоль.Строка записи("Баланс перезагружен");
+            }
+            ещё
+            {
+ Консоль.Строка записи("Пользователь не аутентифицирован");
+            }
+        }
+
+        публичный недействительный каталог()
+        {
+ Консоль.Строка записи("Каталог:");
+
+            ( для каждогоIProduct продукта в каталоге)
+            {
+ Консоль.Строка записи($"Название: {product.Name}, Цена: {product.Цена}, Количество: {продукт.Количество}");
+            }
+        }
+
+        публичная пустая витрина()
+        {
+            if (CurrentUser != null)
+            {
+ Консоль.Строка записи("Корзина для покупок:");
+
+                ( для каждого продукта в корзине.Товары)
+                {
+ Консоль.Строка записи($"Название: {product.Name}, Цена: {product.Цена}, Количество: {продукт.Количество}");
+                }
+ Консоль.Строка записи($"Общая стоимость: {ShoppingCart.Товары.Сумма(p => p.Цена)}");
+            }
+            ещё
+            {
+ Консоль.Строка записи("Пользователь не аутентифицирован");
+            }
+        }
+
+        публичный недействительный просмотр истории покупки()
+        {
+            if (CurrentUser != null)
+            {
+ Консоль.Строка записи("покупок:");
+
+                ( для каждой покупки у текущего пользователя.Покупки)
+                {
+ Консоль.Строка записи($"Дата: {покупка.Дата}");
+                    ( для каждогоIProduct используется продукт при покупке.Продукты)
+                    {
+ Консоль.Строка записи($"Название: {product.Name}, Цена: {product.Цена}, Количество: {продукт.Количество}");
+                    }
+ Консоль.Строка записи();
+                }
+            }
+            ещё
+            {
+ Консоль.Строка записи("Пользователь не аутентифицирован");
+            }
+        }
+
+        публичный список<IProduct> SearchProduct(строковое ключевое слово)
+        {
+            вернуть каталог.Где(продукт => product.Название.Содержит(ключевое слово, сравнение строк.OrdinalIgnoreCase)).ToList();
+        }
+
+        private IUser FindUser(string username, string password)
+        {
+            return users.FirstOrDefault(u => u.Username == username && u.Password == password);
+        }
+
+        private IUser FindUser(string username)
+        {
+            return users.FirstOrDefault(u => u.Username == username);
+        }
+
+        private IProduct FindProduct(string name)
+        {
+            return catalog.FirstOrDefault(p => p.Name == name);
+        }
+
+        private IProduct FindProductInCart(string name)
+        {
+            return shoppingCart.Products.FirstOrDefault(p => p.Name == name);
+        }
+
+        public void SaveCatalogToFile(string filename)
+        {
+            SaveData(catalog, filename);
+        }
+
+        public void LoadCatalogFromFile(string filename)
+        {
+            catalog = LoadData<List<IProduct>>(filename);
+        }
+    }
+Product.cs
+namespace Shopping;
+
+public interface IProduct
+{
+    string Name { get; set; }
+    decimal Price { get; set; }
+    int Quantity { get; set; }
+}
+public class Product : IProduct
+{
+    public string Name { get; set; }
+    public decimal Price { get; set; }
+    public int Quantity { get; set; }
+}
+Program.cs
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Xml.Serialization;
+
+namespace Shopping;
+
+class Program
+    {
+        static ILensStore lensStore = new LensStore();
+
+        static void Main(строка[] аргументов)
+        {
+            bool isRunning = true;
+
+            ( во времябега)
+            {
+ Консоль.Строка записи("1. Аутентификация");
+ Консоль.WriteLine("2. Регистрация");
+ Консоль.Строка записи("3. Просмотр каталога товаров");
+ Консоль.Строка записи("4. Добавить товар в корзину");
+ Консоль.Строка записи("5. Просмотр корзины");
+ Консоль.Строка записи("6. Покупка товаров в корзине");
+ Консоль.Строка записи("7. Пополнить баланс");
+ Консоль.Строка записи("8. Просмотр истории покупок");
+ Консоль.Строка записи("9. Поиск товара");
+ Консоль.WriteLine("10. Выйти");
+ Консоль.WriteLine("11. Добавить новый товар в каталог");
+ Консоль.WriteLine("12. Сохранить каталог в файл");
+ Консоль.WriteLine("13. Загрузить каталог из файла");
+
+ Консоль.Write("Выберите действие: ");
+                = выбор строковой консоли.Строка чтения();
+
+                переключатель (выбор)
+                {
+                    случай "1":
+ Аутентификатор пользователя();
+                        перерыв;
+
+                    случай "2":
+ registerUser();
+                        перерыв;
+
+                    случай "3":
+ lensStore.Показать каталог();
+                        перерыв;
+
+                    случай "4":
+ Добавить producttocart();
+                        перерыв;
+
+                    случай "5":
+ lensStore.Витрина();
+                        перерыв;
+
+                    случай "6":
+ Элементы покупки();
+                        break;
+
+                    case "7":
+                        ReloadBalance();
+                        break;
+
+                    case "8":
+                        lensStore.ViewPurchaseHistory();
+                        break;
+
+                    case "9":
+                        SearchProduct();
+                        break;
+
+                    case "10":
+                        isRunning = false;
+                        перерыв;
+
+                    случай "11":
+ AddNewProductToCatalog();
+                        перерыв;
+
+                    случай "12":
+ SaveCatalogToFile();
+                        перерыв;
+
+                    случай "13":
+ LoadCatalogFromFile();
+                        перерыв;
+
+                    значение по умолчанию:
+ Консоль.WriteLine("Неверный выбор. Попробуйте ещё раз.");
+                        перерыв;
+                }
+            }
+        }
+
+        static void AuthenticateUser()
+        {
+ Консоль.Write("Введите имя пользователя: ");
+            = строка именипользователяв консоли.Строка чтения();
+ Консоль.Write("Введите пароль: ");
+            =строка пароля для консоли.Строка чтения();
+
+ lensStore.Аутентификация(имя пользователя, пароль);
+        }
+
+        статический аннулирующий registerUser()
+        {
+ Консоль.Write("Введите имя пользователя: ");
+            = строка именипользователяв консоли.Строка чтения();
+ Консоль.Write("Введите пароль: ");
+            =строка пароля для консоли.Строка чтения();
+ Консоль.Write("Введите баланс: ");
+            ( Parse . десятичнаяконсольдесятичного.Строка чтения());
+
+ Магазин линз.Зарегистрироваться(имя пользователя, пароль, баланс);
+        }
+
+        статическая пустота AddProductToCart()
+        {
+ Консоль.Write("Введите имя товара для добавления в корзину: ");
+            = имя_продукта string Console.Строка чтения();
+            lensStore.AddToCart(productName);
+        }
+
+        static void PurchaseItems()
+        {
+            lensStore.PurchaseItems();
+        }
+
+        static void ReloadBalance()
+        {
+            Console.Write("Введите сумму для пополнения баланса: ");
+            decimal amount = decimal.Parse(Console.ReadLine());
+            lensStore.ReloadBalance(amount);
+        }
+
+        static void SearchProduct()
+        {
+            Console.Write("Введите ключевое слово для поиска: ");
+            string keyword = Console.ReadLine();
+
+            List<IProduct> results = lensStore.SearchProduct(keyword);
+
+            if (results.Count > 0)
+            {
+ Консоль.WriteLine("Результаты поиска:");
+                ( для каждогоIProduct используется продукт в результатах)
+                {
+ Консоль.Строка записи($"Название: {product.Name}, Цена: {product.Цена}, Количество: {продукт.Количество}");
+                }
+            }
+            ещё
+            {
+ Консоль.WriteLine("Товары не найдены.");
+            }
+        }
+
+        статическая пустота AddNewProductToCatalog()
+        {
+ Консоль.Write("Введите имя нового товара: ");
+            = имя строковой консоли.Строка чтения();
+ Консоль.Write("Введите цену товара: ");
+            ( Разбор . десятичной=ценадесятичнойконсоли.Строка чтения());
+ Консоль.Write("Введите количество товара: ");
+            ( Разбор . int=количествовконсоли.Строка чтения());
+
+ Магазин линз.Добавить каталог продуктов(название, цена,  количество);
+ Консоль.WriteLine("Новый товар добавлен в каталог.");
+        }
+
+        static void сохраняет каталог-файл()
+        {
+ Консоль.Write("Введите имя файла для сохранения каталога: ");
+            = имя файла string Console.Строка чтения();
+ lensStore.Сохранить каталог в файле(имя файла);
+ Консоль.WriteLine("Каталог сохранен в файл.");
+        }
+
+        static void загружает каталог из файла()
+        {
+ Консоль.Write("Введите имя файла для загрузки каталога: ");
+            = имя файла string Console.Строка чтения();
+ Магазин линз.LoadCatalogFromFile(имя файла);
+ Консоль.WriteLine("Каталог загружен из файла.");
+        }
+    }
+Покупка.cs
+пространство имен Shopping;
+
+публичный интерфейс IP purchase
+{
+    DateTime Дата { получить; установить; }
+    >IProduct<Список продуктов { получить; установить; }
+}
+покупка публичного класса : IP purchase
+{
+    public DateTime Дата { получить; установить; }
+    > IProduct<Списокобщедоступных продуктов { получить; установить; }
+}
+Корзина для покупок.cs
+пространство имен Shopping;
+
+публичный интерфейс IShoppingCart
+{
+    >IProduct<Список продуктов { получить; установить; }
+}
+
+тележка для покупок   : IShoppingCart
+{
+    > IProduct<Списокобщедоступных продуктов { получить; установить; }
+}
+User.cs
+пространство имен Shopping;
+
+публичный интерфейс IUser
+{
+    строка имени пользователя { получить; установить; }
+    строковый пароль { получить; установить; }
+    десятичный баланс { получить; установить; }
+    >IPurchase<Список покупок { получить; установить; }
+}
+публичный класс User : IUser
+{
+    публичная строка Имени пользователя { получить; установить; }
+    общедоступная строка пароля { получить; установить; }
+    открытый десятичный баланс { получить; установить; }
+    > IPurchase<Списокпубличных закупок { получить; установить; }
+}
